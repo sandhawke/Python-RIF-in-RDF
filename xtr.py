@@ -3,11 +3,10 @@
 """
 
 Convert an RIF-in-RDF RDF document (stdin) into a RIF XML document
-(stdout).  The rif-in-rdf "XTr" function.  And yet, we do it without
-the schema....?   please explain.
+(stdout).  The rif-in-rdf "XTr" function.
 
-By Sandro Hawke, sandro@w3.org, May 6 2011, based on a Jan 24 2010
-program.
+By Sandro Hawke, sandro@w3.org, May 6 and May 12, 2011, based on a Jan
+24 2010 program.
 
 Copyright © 2010,2011 World Wide Web Consortium, (Massachusetts
 Institute of Technology, European Research Consortium for Informatics

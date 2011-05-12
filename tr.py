@@ -2,7 +2,7 @@
 # -*-mode: python -*-  -*- coding: utf-8 -*-
 """
 
-Implements the 22 June 2010 versions of the RIF-in-RDF mapping.
+Implements the (W3C WG Note) RIF-in-RDF mapping.
 
 By Sandro Hawke, 16 June 2010.
 Revised 3 October 2010 to match current version of RIF_in_RDF.
@@ -16,14 +16,6 @@ will be useful, but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
-
-Produced example in spec by:
-   - cut and paste example-8 from BLD spec
-   - python ../rif_in_rdf.py < bld-8.xml > bld-8.n3
-   - cwm bld-8.n3 > bld-8-nice.n3
-   - hand edit to remove some cwm output, other typographic changes
-Checked with:
-   - python ../turtle_to_rif.py bld-8-nice.n3 > bld-8-loop.xml
 
 TODO:
 

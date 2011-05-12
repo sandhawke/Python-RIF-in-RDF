@@ -7,7 +7,8 @@ This code implements
      http://www.w3.org/TR/2011/NOTE-rif-in-rdf-20110512/
 
 In particular, the encoder and the decode were written at different
-times, in different styles.   They should be merged into on module!
+times, in different styles.  They should be merged into one module,
+with common bits factored out!
 
 Try it:
 
