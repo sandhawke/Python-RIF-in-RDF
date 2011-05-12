@@ -1,0 +1,23 @@
+# http://www.w3.org/2009/sparql/docs/pub/20110512/WD-sparql11-entailment-20110512/Overview.html#RIFCoreEnt
+@prefix : <http://www.w3.org/2007/rif#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rel: <http://purl.org/vocab/relationship/> .
+
+<http://example.org/r1> a :Document;
+   :directives () ;
+   :payload [  a :Group ;
+      :sentences  ( 
+         [ a :Forall; 
+           :formula  [ a :Implies ;
+            :if  [ a :Frame ; 
+                   :object [ a :Var; :varname "S" ] ; 
+                   :slots  ( [ :slotkey   [ a :Const ; :constIRI "http://purl.org/vocab/relationship/worksWith" ];
+                               :slotvalue [ a :Var; :varname "O" ] ] )
+                 ];
+            :then [ a :Frame ; 
+                   :object [ a :Var; :varname "S" ] ; 
+                   :slots  ( [ :slotkey   [  a :Const ; :constIRI "http://xmlns.com/foaf/0.1/knows" ];
+                               :slotvalue [ a :Var; :varname "O" ] ] )
+                 ] ] ;
+            :vars  ( [a :Var;  :varname "S" ] [ a :Var; :varname "O" ] ) ] ) 
+  ] .

@@ -1,0 +1,27 @@
+
+This is experimental code.  I'm not particularly proud of it; I just
+wanted to see something working, and didn't have a lot of time.
+
+This code implements
+
+     http://www.w3.org/TR/2011/NOTE-rif-in-rdf-20110512/
+
+In particular, the encoder and the decode were written at different
+times, in different styles.   They should be merged into on module!
+
+Try it:
+
+# translate BLD example 8 into Turtle
+python tr.py < test/bld-8.xml > out-bld-8.ttl
+
+# extract the RIF document from that Turtle
+python xtr.py out-bld-8.ttl > out-bld-8-loop.xml
+
+# To compare, ignoring whitespace, etc
+python xmldump.py < out-bld-8.xml > out-bld-8-loop.xdump
+python xmldump.py < test/bld-8.xml > out-bld-8.xdump
+diff out-bld-8-loop.xdump out-bld-8.xdump
+
+(Observe that with the current code and data the xml:base declaration
+in the BLD example gets lost.  That's okay, because we always write
+out absolute URIs.)
