@@ -27,12 +27,14 @@ TODO:
 
 import sys
 import urllib2
+from urlparse import urljoin
 
 # http://docs.python.org/library/xml.etree.elementtree.html 
 import xml.etree.cElementTree as etree 
 
 rifns = "http://www.w3.org/2007/rif#"
 rdfns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns = "http://www.w3.org/XML/1998/namespace"
 xsdns = "http://www.w3.org/2001/XMLSchema#"
 
 table_3 = {
@@ -112,7 +114,7 @@ class RDFList(object):
 class Namespace(object):
     """
     For conveniences, lets us write rif.foo as shorthand for
-    "{"+rifxmlns+"}"+"foo".
+    "{"+rifns+"}"+"foo".
     """
     def __init__(self, ns):
         self.ns = ns
@@ -210,13 +212,15 @@ def error(x, msg):
 # The main describe() function
 #
 
-def describe(rifxml, default_iri=None):
+def describe(rifxml, default_iri=None, base=None):
     """Given a RIF XML document, or a part of an RIF XML document
     (where the element is a "class stripe"), return the pair <focus,
     triples>) where triples is a set of RDF triples (an RDF graph),
     and focus is the node in that graph which represents the top-level
     element in the provided XML."""
 
+    base = rifxml.get("{"+xmlns+"}base", base)
+        
     focus = get_focus(rifxml, default_iri)
     triples = []
     tag = rifxml.tag
@@ -238,7 +242,9 @@ def describe(rifxml, default_iri=None):
             text = ""
 
         if t == rifns + "iri":
-            new = (focus, rifns+"constIRI", PlainLiteral(text))
+            iri=urljoin(base, text, allow_fragments=True)
+            new = (focus, rifns+"constIRI", 
+                   TypedLiteral(iri, datatype=xsdns+"anyURI"))
         elif t == rifns + "local":
             new = (focus, rifns+"constname", PlainLiteral(text))
         elif t == 'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral':
@@ -293,7 +299,7 @@ def describe(rifxml, default_iri=None):
                 error("elements with ordered='yes' must not be repeated")
             values=[]
             for child in group[0].getchildren():
-                (child_focus, child_triples) = describe(child)
+                (child_focus, child_triples) = describe(child, base=base)
                 values.append(child_focus)
                 triples.extend(child_triples)
             value = RDFList(values)
@@ -302,7 +308,7 @@ def describe(rifxml, default_iri=None):
                 error(group[0], "only elements in listed as Mode=2 in Table 3 may be repeated")
             if contains_markup(group[0]):
                 child = the_child_of(group[0])
-                (value, child_triples) = describe(child)
+                (value, child_triples) = describe(child, base=base)
                 triples.extend(child_triples)
             else:
                 # eg <location>
@@ -312,7 +318,7 @@ def describe(rifxml, default_iri=None):
             for occurance in group:
                 if contains_markup(occurance):
                     child = the_child_of(occurance)
-                    (child_focus, child_triples) = describe(child)
+                    (child_focus, child_triples) = describe(child, base=base)
                 else:
                     # eg <profile> [optional, not repeatable]
                     child_focus = PlainLiteral(occurance.text)
@@ -331,19 +337,19 @@ def describe(rifxml, default_iri=None):
                     assert(len(occurance) == 2)
                     assert(occurance[0].tag == rif.Name)
                     name = occurance[0].text
-                    (v, vt) = describe(occurance[1])
+                    (v, vt) = describe(occurance[1], base=base)
                     triples.extend(vt)
                     triples.append(  (node, rifns+"argname", PlainLiteral(name))  )
                     triples.append(  (node, rifns+"argvalue", v)  )
                 else:
                     # in std dialects, tag == rif.Frame here
                     assert(len(occurance) == 2)
-                    (k, kt) = describe(occurance[0])
-                    (v, vt) = describe(occurance[1])
+                    (k, kt) = describe(occurance[0], base=base)
+                    (v, vt) = describe(occurance[1], base=base)
                     triples.extend(kt)
                     triples.extend(vt)
                     triples.append(  (node, rdfns+"type", 
-                                      LabeledNode(rdfns+"Slot"))  )
+                                      LabeledNode(rifns+"Slot"))  )
                     triples.append(  (node, rifns+"slotkey", k)  )
                     triples.append(  (node, rifns+"slotvalue", v)  )
 
@@ -366,68 +372,31 @@ def describe(rifxml, default_iri=None):
 
     return (focus, triples)
 
-#
-# Extract
-#
-
-def extract(graph, node):
-    # using an asn07-style template, extract what's there, if we can...
-
-    # ...    what about extra stuff...?
-
-    raise Exception
-
-
-#
-# Basic command-line driver functions
-#
-
-def from_file(filename):
-    with open(filename) as stream:
-        doc = etree.fromstring(stream.read())
-    if doc.tag != rif.Document:
-        error(doc, "Root element is not rif:Document.")
-    (focus, triples) = describe(doc, LabeledNode("file:/"+filename))
-
-    print "# RIF focus is", focus.as_turtle()
-    print "# %d triples" % len(triples)
-    for (s,p,o) in triples:
-        print s.as_turtle(), "<"+p+">", o.as_turtle(),"."
-
-def from_web(url):
-    stream = urllib2.urlopen(url) 
-    doc = etree.fromstring(stream.read())
-    stream.close()
-    if doc.tag != rif.Document:
-        error(doc, "Root element is not rif:Document.")
-    (focus, triples) = describe(doc, LabeledNode(url))
-
-    print "# RIF focus is", focus.as_turtle()
-    print "# %d triples" % len(triples)
-    for (s,p,o) in triples:
-        print s.as_turtle(), "<"+p+">", o.as_turtle(),"."
-    
 def main():
     if len(sys.argv) == 1:
-        focus = BlankNode()
         stream = sys.stdin
         doc = etree.fromstring(stream.read())
         stream.close()
+        base = None
     else:
         src = sys.argv[1]
         if ":" in src:
             stream = urllib2.urlopen(src) 
+            base = src
             doc = etree.fromstring(stream.read())
             stream.close()
-            focus = LabeledNode(src)
         else:
             with open(src) as stream:
                 doc = etree.fromstring(stream.read())
-                focus = LabeledNode("file:/"+src)
+                base = "file:/"+src
     
     if doc.tag != rif.Document:
         error(doc, "Root element is not rif:Document.")
-    (focus, triples) = describe(doc, focus)
+    if base:
+        focus = LabeledNode(focus)
+    else:
+        focus = BlankNode()
+    (focus, triples) = describe(doc, focus, base)
 
     print "# RIF focus is", focus.as_turtle()
     print "# %d triples" % len(triples)

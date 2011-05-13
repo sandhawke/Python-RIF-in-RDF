@@ -23,6 +23,5 @@ python xmldump.py < out-bld-8.xml > out-bld-8-loop.xdump
 python xmldump.py < test/bld-8.xml > out-bld-8.xdump
 diff out-bld-8-loop.xdump out-bld-8.xdump
 
-(Observe that with the current code and data the xml:base declaration
-in the BLD example gets lost.  That's okay, because we always write
-out absolute URIs.)
+(Observe that the xml:base declaration is lost, but that's fine
+because in the output the URIs have to be absolute.)
